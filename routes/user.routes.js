@@ -1,10 +1,12 @@
 import express from "express";
-import { register } from "../controllers/user.controller.js";
+import { loginController, register, veryifyMailController } from "../controllers/user.controller.js";
 
 const router = express.Router();
 
 //router.get("/register",register)
 
-router.route("/register").get(register);
+router.route("/register").post(register);
+router.route("/verify/:token").get(veryifyMailController);
+router.route("/login").get(loginController);
 
 export default router;
