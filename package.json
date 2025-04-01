@@ -1,0 +1,17 @@
+{
+  "name": "googleauth",
+  "version": "1.0.0",
+  "description": "Google Auth Backend",
+  "license": "ISC",
+  "author": "Divisht",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run":"nodemon -r dotenv/config --experimental-json-modules index.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.9"
+  }
+}
