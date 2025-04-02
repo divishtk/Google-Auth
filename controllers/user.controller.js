@@ -169,4 +169,13 @@ const loginController = async (req, res) => {
  }
 };
 
+
+
+const getProfileController = async (req, res) => { 
+
+
+    
+
+}
+
 export { register, veryifyMailController ,loginController};
