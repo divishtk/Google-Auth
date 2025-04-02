@@ -142,12 +142,27 @@ const loginController = async (req, res) => {
       }
     );
 
+    //refresh token generation
+    const rfToken = jwt.sign(
+      {
+        id: users._id,
+      },
+      process.env.REFRESH_TOKEN_SECRET,
+      {
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+      }
+    );
+
+    users.refreshToken = rfToken;
+    await users.save();
+
     const cookieOptions = {
       expiresIn: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       httpOnly: true, //XSS attacks
     };
 
     res.cookie("jwtToken", jwtToken, cookieOptions);
+    res.cookie("rfToken", rfToken, cookieOptions);
 
     return res.status(200).json({
       success: true,
@@ -167,29 +182,61 @@ const loginController = async (req, res) => {
 };
 
 const getProfileController = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const users = await user.findById(userId).select("-password");
-        if (!users) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
-        return res.status(200).json({
-            success: true,
-            message: "User profile fetched successfully",
-            data: {
-                users,
-            },
-        });
-        
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong while fetching user",
-        });
+  try {
+    const userId = req.user.id;
+    const users = await user.findById(userId).select("-password -refreshToken");
+    if (!users) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
+    return res.status(200).json({
+      success: true,
+      message: "User profile fetched successfully",
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching user",
+    });
+  }
+};
+
+const logoutController = async (req, res) => {
+  try {
+    console.log('user',req.user)
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized Access",
+      });
+    }
+
+    // Find the user and remove the refresh token from the database
+    const users = await user.findById(req.user.id);
+    if (users) {
+      users.refreshToken = null; // Remove stored refresh token
+      await users.save();
+    }
+
+    //clear cookies
+    res.cookie("jwtToken", "", {
+      httpOnly: true,
+    });
+
+    res.cookie("rfToken", "", {
+        httpOnly: true,
+      });
+
+    return res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (error) {}
 };
 
 export {
@@ -197,4 +244,5 @@ export {
   veryifyMailController,
   loginController,
   getProfileController,
+  logoutController,
 };
